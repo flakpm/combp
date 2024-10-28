@@ -2,5 +2,8 @@ import Parse
 
 main :: IO ()
 main = do
-  prelude <- readFile "prelude.ski"
-  print $ traverse parseCombinator $ lines prelude
+  basis <- readFile "basis.ski"
+  let combinators = traverse parseCombinator $ lines basis
+  let string = unlines . map show <$> combinators
+  _ <- sequenceA $ putStrLn <$> string
+  return ()
