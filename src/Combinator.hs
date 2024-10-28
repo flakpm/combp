@@ -2,18 +2,50 @@
 
 module Combinator where
 
-data Expression = Expression [Expression] | Element String
+data Term = SubExpression [Term] | Element String | BracketAbstraction [Term] String
   deriving (Eq)
 
-instance Show Expression where
-  show :: Expression -> String
+instance Show Term where
+  show :: Term -> String
   show (Element e) = e
-  show (Expression es) = "(" ++ formattedExprs ++ ")"
-    where
-      formattedExprs = foldl (\acc e -> acc ++ addSpace acc ++ show e) "" es
-      addSpace acc = if null acc then "" else " "
+  show (SubExpression es) = "(" ++ formatExprs es ++ ")"
+  show (BracketAbstraction es v) = "[" ++ formatExprs es ++ "]_" ++ v
 
-data Combinator = Pure String Expression | Impure String [String] Expression
+formatExprs :: [Term] -> String
+formatExprs = foldl (\acc e -> acc ++ addSpace acc ++ show e) ""
+  where
+    addSpace acc = if null acc then "" else " "
+
+reduceParens :: Term -> Term
+reduceParens (SubExpression es) =
+  removeSingleNestedParens $
+    removeFirstElemParens $
+      SubExpression (map reduceParens es)
+reduceParens t = t
+
+removeFirstElemParens :: Term -> Term
+removeFirstElemParens (SubExpression (e : es)) = case e of
+  SubExpression es' -> SubExpression (es' ++ es)
+  _ -> SubExpression (e : es)
+removeFirstElemParens t = t
+
+removeSingleNestedParens :: Term -> Term
+removeSingleNestedParens (SubExpression es) = SubExpression (map f es)
+  where
+    f (SubExpression [e]) = e
+    f t = t
+removeSingleNestedParens t = t
+
+data Combinator
+  = Pure
+      { combinatorName :: String,
+        combinatorExpr :: Term
+      }
+  | Impure
+      { combinatorName :: String,
+        combinatorArgs :: [String],
+        combinatorExpr :: Term
+      }
   deriving (Eq)
 
 instance Show Combinator where

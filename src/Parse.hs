@@ -2,7 +2,7 @@
 
 module Parse (parseExp, parseCombinator) where
 
-import Combinator (Combinator (..), Expression (..))
+import Combinator (Combinator (..), Term (..))
 import Control.Applicative (Alternative (..))
 import Data.Char (isAlphaNum, isSpace)
 
@@ -48,22 +48,22 @@ ifP f = Parser p
 delimitedP :: Parser a -> Parser b -> Parser c -> Parser b
 delimitedP p1 p2 p3 = p1 *> p2 <* p3
 
-singleCharElemP :: Parser Expression
+singleCharElemP :: Parser Term
 singleCharElemP = Element . return <$> ifP isAlphaNum
 
-delimitedElemP :: Parser Expression
+delimitedElemP :: Parser Term
 delimitedElemP = Element <$> delimitedP (charP '\\') (some $ ifP isAlphaNum) (charP '\\')
 
-elemP :: Parser Expression
+elemP :: Parser Term
 elemP = singleCharElemP <|> delimitedElemP
 
-subexpP :: Parser Expression
+subexpP :: Parser Term
 subexpP = delimitedP (charP '(') expressionP (charP ')')
 
-expressionP :: Parser Expression
-expressionP = Expression <$> some (subexpP <|> elemP)
+expressionP :: Parser Term
+expressionP = SubExpression <$> some (subexpP <|> elemP)
 
-parseExp :: String -> Maybe Expression
+parseExp :: String -> Maybe Term
 parseExp = runTopLevelParser expressionP
 
 pureCombP :: Parser Combinator
