@@ -1,12 +1,11 @@
-{-# LANGUAGE InstanceSigs #-}
-
 module Combinator where
+
+import Control.Applicative (Alternative (..))
 
 data Term = Expression [Term] | Element String | Abstraction Term String
   deriving (Eq)
 
 instance Show Term where
-  show :: Term -> String
   show (Element e) = e
   show (Expression es) = "(" ++ formatExprs es ++ ")"
   show (Abstraction e v) = "[" ++ show e ++ "]_" ++ v
@@ -58,7 +57,6 @@ data Combinator
   deriving (Eq)
 
 instance Show Combinator where
-  show :: Combinator -> String
   show (Pure name expr) = name ++ " = " ++ show expr
   show (Impure name args expr) = name ++ formattedArgs ++ " = " ++ show expr
     where
@@ -72,7 +70,7 @@ addAbstraction (Impure n as t) = Just $ reduceParensC $ Impure n (init as) (Abst
 containsAbstractionT :: Term -> Bool
 containsAbstractionT (Abstraction _ _) = True
 containsAbstractionT (Expression ts) = any containsAbstractionT ts
-containsAbstractionT _ = False 
+containsAbstractionT _ = False
 
 containsAbstractionC :: Combinator -> Bool
 containsAbstractionC = cMap containsAbstractionT
@@ -107,7 +105,7 @@ abstractionSubstitutionT (Abstraction (Expression ts) v) =
           Abstraction (Expression $ init ts) v,
           Abstraction (last ts) v
         ]
-    (False, True) -> case last ts of 
+    (False, True) -> case last ts of
       Element _ ->
         -- [fx]_x = f 
         -- if f does not contain x
@@ -120,7 +118,7 @@ abstractionSubstitutionT (Abstraction (Expression ts) v) =
           Expression (init ts),
           Abstraction (last ts) v
         ]
-    (True, False) -> 
+    (True, False) ->
       -- [fg]_x = C [f]_x g 
       -- if f contains x but g does not
       Expression [
@@ -140,6 +138,19 @@ abstractionSubstitutionT t = t
 
 abstractionSubstitutionC :: Combinator -> Combinator
 abstractionSubstitutionC = cMutMap abstractionSubstitutionT
+
+manyAbsSubsT :: Term -> Term
+manyAbsSubsT t = 
+  if containsAbstractionT t
+  then manyAbsSubsT (abstractionSubstitutionT $ reduceParensT t)
+  else reduceParensT t
+
+manyAbsSubsC :: Combinator -> Combinator
+manyAbsSubsC = cMutMap manyAbsSubsT
+
+abstractionElimination :: Combinator -> Maybe Combinator
+abstractionElimination c = 
+  (addAbstraction c >>= (abstractionElimination . manyAbsSubsC)) <|> Just c
 
 cMap :: (Term -> a) -> Combinator -> a
 cMap f (Pure _ t) = f t
