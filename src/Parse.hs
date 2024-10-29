@@ -1,6 +1,6 @@
 {-# LANGUAGE InstanceSigs #-}
 
-module Parse (parseExp, parseCombinator) where
+module Parse (parseTerm, parseComb) where
 
 import Combinator (Combinator (..), Term (..), reduceParensC, reduceParensT)
 import Control.Applicative (Alternative (..))
@@ -63,8 +63,8 @@ subexpP = delimitedP (charP '(') expressionP (charP ')')
 expressionP :: Parser Term
 expressionP = Expression <$> some (subexpP <|> elemP)
 
-parseExp :: String -> Maybe Term
-parseExp = (reduceParensT <$>) . runTopLevelParser expressionP
+parseTerm :: String -> Maybe Term
+parseTerm = (reduceParensT <$>) . runTopLevelParser expressionP
 
 pureCombP :: Parser Combinator
 pureCombP = Parser $ \input -> do
@@ -84,8 +84,8 @@ impureCombP = Parser $ \input -> do
 combP :: Parser Combinator
 combP = pureCombP <|> impureCombP
 
-parseCombinator :: String -> Maybe Combinator
-parseCombinator = (reduceParensC <$>) . runTopLevelParser combP
+parseComb :: String -> Maybe Combinator
+parseComb = (reduceParensC <$>) . runTopLevelParser combP
 
 runTopLevelParser :: Parser a -> String -> Maybe a
 runTopLevelParser p s = snd <$> runParser (allConsumingP p) (filter (not . isSpace) s)
