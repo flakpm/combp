@@ -61,7 +61,7 @@ subexpP :: Parser Term
 subexpP = delimitedP (charP '(') expressionP (charP ')')
 
 expressionP :: Parser Term
-expressionP = SubExpression <$> some (subexpP <|> elemP)
+expressionP = Expression <$> some (subexpP <|> elemP)
 
 parseExp :: String -> Maybe Term
 parseExp = runTopLevelParser expressionP
