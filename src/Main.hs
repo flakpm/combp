@@ -1,7 +1,7 @@
-import Data.Foldable (traverse_)
-import Parse
 import Combinator
 import Context
+import Data.Foldable (traverse_)
+import Parse
 
 main :: IO ()
 main = do

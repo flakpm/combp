@@ -18,7 +18,8 @@ formatExprs = foldl (\acc e -> acc ++ addSpace acc ++ show e) ""
 reduceParensT :: Term -> Term
 reduceParensT (Expression [t]) =
   removeSingleNestedParens $
-    removeFirstElemParens $ reduceParensT t
+    removeFirstElemParens $
+      reduceParensT t
 reduceParensT (Expression ts) =
   removeSingleNestedParens $
     removeFirstElemParens $
@@ -107,25 +108,25 @@ abstractionSubstitutionT (Abstraction (Expression ts) v) =
         ]
     (False, True) -> case last ts of
       Element _ ->
-        -- [fx]_x = f 
+        -- [fx]_x = f
         -- if f does not contain x
         Expression (init ts)
       _ ->
         -- [fg]_x = B f [g]_x
         -- if f does not contain x but g does
-        Expression [
-          Element "B",
-          Expression (init ts),
-          Abstraction (last ts) v
-        ]
+        Expression
+          [ Element "B",
+            Expression (init ts),
+            Abstraction (last ts) v
+          ]
     (True, False) ->
-      -- [fg]_x = C [f]_x g 
+      -- [fg]_x = C [f]_x g
       -- if f contains x but g does not
-      Expression [
-        Element "C",
-        Abstraction (Expression $ init ts) v,
-        last ts
-      ]
+      Expression
+        [ Element "C",
+          Abstraction (Expression $ init ts) v,
+          last ts
+        ]
     (False, False) ->
       -- [f]_x = K f
       -- if f does not contain x
@@ -140,16 +141,16 @@ abstractionSubstitutionC :: Combinator -> Combinator
 abstractionSubstitutionC = cMutMap abstractionSubstitutionT
 
 manyAbsSubsT :: Term -> Term
-manyAbsSubsT t = 
+manyAbsSubsT t =
   if containsAbstractionT t
-  then manyAbsSubsT (abstractionSubstitutionT $ reduceParensT t)
-  else reduceParensT t
+    then manyAbsSubsT (abstractionSubstitutionT $ reduceParensT t)
+    else reduceParensT t
 
 manyAbsSubsC :: Combinator -> Combinator
 manyAbsSubsC = cMutMap manyAbsSubsT
 
 abstractionElimination :: Combinator -> Maybe Combinator
-abstractionElimination c = 
+abstractionElimination c =
   (addAbstraction c >>= (abstractionElimination . manyAbsSubsC)) <|> Just c
 
 cMap :: (Term -> a) -> Combinator -> a
