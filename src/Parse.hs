@@ -2,7 +2,7 @@
 
 module Parse (parseExp, parseCombinator) where
 
-import Combinator (Combinator (..), Term (..))
+import Combinator (Combinator (..), Term (..), reduceParensC, reduceParensT)
 import Control.Applicative (Alternative (..))
 import Data.Char (isAlphaNum, isSpace)
 
@@ -64,7 +64,7 @@ expressionP :: Parser Term
 expressionP = Expression <$> some (subexpP <|> elemP)
 
 parseExp :: String -> Maybe Term
-parseExp = runTopLevelParser expressionP
+parseExp = (reduceParensT <$>) . runTopLevelParser expressionP
 
 pureCombP :: Parser Combinator
 pureCombP = Parser $ \input -> do
@@ -85,7 +85,7 @@ combP :: Parser Combinator
 combP = pureCombP <|> impureCombP
 
 parseCombinator :: String -> Maybe Combinator
-parseCombinator = runTopLevelParser combP
+parseCombinator = (reduceParensC <$>) . runTopLevelParser combP
 
 runTopLevelParser :: Parser a -> String -> Maybe a
 runTopLevelParser p s = snd <$> runParser (allConsumingP p) (filter (not . isSpace) s)

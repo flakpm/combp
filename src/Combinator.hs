@@ -17,7 +17,9 @@ formatExprs = foldl (\acc e -> acc ++ addSpace acc ++ show e) ""
     addSpace acc = if null acc then "" else " "
 
 reduceParensT :: Term -> Term
-reduceParensT (Expression [t]) = t
+reduceParensT (Expression [t]) =
+  removeSingleNestedParens $
+    removeFirstElemParens $ reduceParensT t
 reduceParensT (Expression ts) =
   removeSingleNestedParens $
     removeFirstElemParens $
@@ -65,11 +67,12 @@ instance Show Combinator where
 addAbstraction :: Combinator -> Maybe Combinator
 addAbstraction (Pure _ _) = Nothing
 addAbstraction (Impure _ [] _) = Nothing
-addAbstraction (Impure n as t) = Just $ Impure n (init as) (Abstraction t $ last as)
+addAbstraction (Impure n as t) = Just $ reduceParensC $ Impure n (init as) (Abstraction t $ last as)
 
 containsAbstractionT :: Term -> Bool
 containsAbstractionT (Abstraction _ _) = True
-containsAbstractionT _ = False
+containsAbstractionT (Expression ts) = any containsAbstractionT ts
+containsAbstractionT _ = False 
 
 containsAbstractionC :: Combinator -> Bool
 containsAbstractionC = cMap containsAbstractionT
