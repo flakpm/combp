@@ -1,0 +1,11 @@
+M=SII
+Y=BM(CBM)
+\True\xy=x
+\False\xy=y
+\Not\ b=b \True\ \False\
+\Pair\xyi=ixy
+\Fst\p=p \True\
+\Snd\p=p \False\
+0=I
+\IsZero\ = \Fst\
+\Next\ n = \Pair\ \False\ n

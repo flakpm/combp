@@ -1,6 +1,6 @@
 module Combinator where
 
-import Control.Applicative (Alternative (..))
+import Data.Maybe (fromMaybe)
 
 data Term = Expression [Term] | Element String | Abstraction Term String
   deriving (Eq)
@@ -149,9 +149,9 @@ manyAbsSubsT t =
 manyAbsSubsC :: Combinator -> Combinator
 manyAbsSubsC = cMutMap manyAbsSubsT
 
-abstractionElimination :: Combinator -> Maybe Combinator
+abstractionElimination :: Combinator -> Combinator
 abstractionElimination c =
-  (addAbstraction c >>= (abstractionElimination . manyAbsSubsC)) <|> Just c
+  fromMaybe c $ (abstractionElimination . manyAbsSubsC) <$> addAbstraction c
 
 cMap :: (Term -> a) -> Combinator -> a
 cMap f (Pure _ t) = f t
@@ -160,3 +160,8 @@ cMap f (Impure _ _ t) = f t
 cMutMap :: (Term -> Term) -> Combinator -> Combinator
 cMutMap f (Pure n t) = Pure n $ f t
 cMutMap f (Impure n as t) = Impure n as $ f t
+
+makePure :: Combinator -> Maybe Combinator
+makePure (Pure n t) = Just $ Pure n t
+makePure (Impure n [] t) = Just $ Pure n t
+makePure _ = Nothing
