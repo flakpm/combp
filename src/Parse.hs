@@ -1,10 +1,11 @@
 {-# LANGUAGE InstanceSigs #-}
 
-module Parse (parseTerm, parseComb) where
+module Parse (parseTerm, parseComb, parseFile) where
 
 import Combinator (Combinator (..), Term (..), reduceParensC, reduceParensT)
 import Control.Applicative (Alternative (..))
 import Data.Char (isAlphaNum, isSpace)
+import Context
 
 newtype Parser a = Parser
   { runParser :: String -> Maybe (String, a)
@@ -94,3 +95,9 @@ allConsumingP :: Parser a -> Parser a
 allConsumingP (Parser p) = Parser $ \input -> do
   (input', x) <- p input
   if null input' then Just (input', x) else Nothing
+
+
+parseFile :: Context -> String -> IO (Maybe Context)
+parseFile c file = do
+  x <- traverse parseComb . lines <$> readFile file
+  return $ x >>= registerAll c

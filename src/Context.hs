@@ -54,3 +54,15 @@ reduceAllT t =
 
 reduceAllC :: Combinator -> Combinator
 reduceAllC = cMutMap reduceAllT
+
+
+registerAll :: Context -> [Combinator] -> Maybe Context
+registerAll initContext = foldl f $ Just initContext
+  where
+    f acc c = do
+      con <- acc
+      c' <- makePure $ contextSubsC con $ abstractionElimination c
+      register con c'
+
+emptyContext :: Context
+emptyContext = Context []
