@@ -1,7 +1,5 @@
 module Combinator where
 
-import Data.Maybe (fromMaybe)
-
 data Term = Expression [Term] | Element String | Abstraction Term String
   deriving (Eq)
 
@@ -151,7 +149,7 @@ manyAbsSubsC = cMutMap manyAbsSubsT
 
 abstractionElimination :: Combinator -> Combinator
 abstractionElimination c =
-  fromMaybe c $ (abstractionElimination . manyAbsSubsC) <$> addAbstraction c
+  maybe c (abstractionElimination . manyAbsSubsC) (addAbstraction c)
 
 cMap :: (Term -> a) -> Combinator -> a
 cMap f (Pure _ t) = f t
