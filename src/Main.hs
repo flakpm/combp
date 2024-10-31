@@ -1,14 +1,21 @@
 import Context
+import Control.Monad
 import Data.Foldable (traverse_)
 import Parse
-import Control.Monad
 
 files :: [String]
 files = ["prelude.ski", "nums.ski"]
 
 main :: IO ()
 main = do
-  x <- foldl (\acc file -> acc >>= ((join <$>) . traverse (`parseFile` file)) ) (return $ Just emptyContext) files
-  traverse_ print x
+  context <- foldl accumContextIO (return $ Just emptyContext) files
 
+  putStrLn "Eval:"
+  input <- getLine
 
+  let e = context >>= (`evaluateT` input)
+
+  traverse_ print e
+
+accumContextIO :: IO (Maybe Context) -> String -> IO (Maybe Context)
+accumContextIO acc file = acc >>= ((join <$>) . traverse (`parseFile` file))

@@ -55,7 +55,6 @@ reduceAllT t =
 reduceAllC :: Combinator -> Combinator
 reduceAllC = cMutMap reduceAllT
 
-
 registerAll :: Context -> [Combinator] -> Maybe Context
 registerAll initContext = foldl f $ Just initContext
   where

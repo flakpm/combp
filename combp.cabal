@@ -15,5 +15,5 @@ executable combp
         Context
 
     default-language: Haskell2010
-    ghc-options:      -Wall
+    ghc-options:      -Wall -O2
     build-depends:    base ^>=4.17.2.0
