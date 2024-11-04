@@ -2,7 +2,7 @@
 
 module Parse where
 
-import Combinator (Combinator (..), Term (..), reduceParensC, reduceParensT)
+import Combinator 
 import Context
 import Control.Applicative (Alternative (..))
 import Data.Char (isAlphaNum, isSpace)
