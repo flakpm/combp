@@ -3,7 +3,6 @@
 module Parse where
 
 import Combinator 
-import Context
 import Control.Applicative (Alternative (..))
 import Data.Char (isAlphaNum, isSpace)
 
@@ -65,7 +64,7 @@ expressionP :: Parser Term
 expressionP = Expression <$> some (subexpP <|> elemP)
 
 parseTerm :: String -> Maybe Term
-parseTerm = (reduceParensT <$>) . runTopLevelParser expressionP
+parseTerm = runTopLevelParser expressionP
 
 pureCombP :: Parser Combinator
 pureCombP = Parser $ \input -> do
@@ -86,7 +85,7 @@ combP :: Parser Combinator
 combP = pureCombP <|> impureCombP
 
 parseComb :: String -> Maybe Combinator
-parseComb = (reduceParensC <$>) . runTopLevelParser combP
+parseComb = runTopLevelParser combP
 
 runTopLevelParser :: Parser a -> String -> Maybe a
 runTopLevelParser p s = snd <$> runParser (allConsumingP p) (filter (not . isSpace) s)
@@ -96,10 +95,4 @@ allConsumingP (Parser p) = Parser $ \input -> do
   (input', x) <- p input
   if null input' then Just (input', x) else Nothing
 
-parseFile :: Context -> String -> IO (Maybe Context)
-parseFile c file = do
-  x <- traverse parseComb . lines <$> readFile file
-  return $ x >>= registerAll c
 
-evaluateT :: Context -> String -> Maybe Term
-evaluateT c = (reduceAllT . contextSubsT c <$>) . parseTerm
